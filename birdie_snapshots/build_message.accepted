@@ -1,0 +1,7 @@
+---
+version: 1.2.6
+title: build message
+file: ./test/web/slack/message_test.gleam
+test_name: build_message_test
+---
+{"response_type":"in_channel","blocks":[{"text":{"type":"mrkdwn","text":"status"},"type":"section","fields":[]},{"accessory":{"alt_text":"Thumbnail","type":"image","image_url":"some_url"},"type":"section","fields":[{"type":"mrkdwn","text":"*Artist*"},{"type":"mrkdwn","text":"*Name*"},{"type":"plain_text","text":"artist"},{"type":"plain_text","text":"name"},{"type":"mrkdwn","text":"*Album*"},{"type":"mrkdwn","text":"*Stream*"},{"type":"plain_text","text":"album"},{"type":"mrkdwn","text":"spotify_link"}]}]}
