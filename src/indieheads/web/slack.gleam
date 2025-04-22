@@ -121,25 +121,13 @@ fn now_playing_message(
     string.join([artist_line, name_line, album_line, link_line], with: "\n")
   }
 
-  let track_section = [
-    block.section_text(co.text(track_text, [co.text_kind(co.Markdown)])),
-  ]
-
-  let track_section = case track.thumbnail {
-    Some(thumbnail) -> [
-      block.section_accessory(
-        eo.image(thumbnail, [eo.image_alt_text("Thumbnail")]),
-      ),
-      ..track_section
-    ]
-    _ -> track_section
-  }
-
   message.build(
     [
       block.context([co.text(status, [co.text_kind(co.Markdown)])]),
       block.divider(),
-      block.section(track_section),
+      block.section([
+        block.section_text(co.text(track_text, [co.text_kind(co.Markdown)])),
+      ]),
     ],
     where: message.InChannel,
   )
