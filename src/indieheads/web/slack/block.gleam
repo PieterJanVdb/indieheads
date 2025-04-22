@@ -67,7 +67,7 @@ fn section_block_to_json(block: SectionBlock) -> json.Json {
 fn context_block_to_json(block: ContextBlock) {
   json.object([
     #("type", json.string("context")),
-    #("fields", json.array(block.fields, of: co.text_object_to_json)),
+    #("elements", json.array(block.fields, of: co.text_object_to_json)),
   ])
 }
 

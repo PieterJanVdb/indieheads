@@ -94,7 +94,12 @@ fn now_playing_message(
       False -> "has last listened to:"
     }
 
-    "<https://www.lastfm.com/user/" <> user <> "|*" <> user <> "*> " <> current
+    ":headphones: <https://www.lastfm.com/user/"
+    <> user
+    <> "|*"
+    <> user
+    <> "*> "
+    <> current
   }
 
   let spotify_link = case url {
