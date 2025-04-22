@@ -4,7 +4,7 @@ import gleam/http
 import gleam/http/request
 import gleam/httpc
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import gleam/string_tree
@@ -19,6 +19,7 @@ import indieheads/web/slack/composition_object as co
 import indieheads/web/slack/element_object as eo
 import indieheads/web/slack/message
 import indieheads/web/slack/verify
+import prng/random
 import wisp.{type Request, type Response}
 
 pub type Command {
@@ -44,10 +45,6 @@ fn handle_command(
         request.set_method(base_req, http.Post)
         |> request.set_header("content-type", "application/json")
         |> request.set_body(msg)
-
-      echo msg
-
-      echo req
 
       case httpc.send(req) {
         Ok(res) if res.status < 400 -> {
@@ -85,9 +82,92 @@ fn error_message() {
   )
 }
 
+fn now_playing_message(
+  ctx ctx: Context,
+  user user: String,
+  track track: lastfm.Track,
+  url url: Option(String),
+) {
+  let status = {
+    let current = case track.now_playing {
+      True -> "is currently listening to:"
+      False -> "has last listened to:"
+    }
+
+    "<https://www.lastfm.com/user/" <> user <> "|*" <> user <> "*> " <> current
+  }
+
+  let spotify_link = case url {
+    None -> "No stream found..."
+    Some(url) -> {
+      let encoded_link =
+        bit_array.from_string(url) |> bit_array.base64_encode(True)
+      let redirect_url = ctx.domain <> "/redirect/spotify?link=" <> encoded_link
+
+      "<" <> redirect_url <> "|Listen on Spotify>"
+    }
+  }
+
+  let track_section = [
+    block.section_fields(
+      [
+        co.text("*Artist*", [co.text_kind(co.Markdown)]),
+        co.text("*Name*", [co.text_kind(co.Markdown)]),
+        co.text(track.artist, []),
+        co.text(track.name, []),
+        co.text("*Album*", [co.text_kind(co.Markdown)]),
+        co.text("*Stream*", [co.text_kind(co.Markdown)]),
+        co.text(track.album, []),
+        co.text(spotify_link, [co.text_kind(co.Markdown)]),
+      ]
+      |> list.map(block.co_field),
+    ),
+  ]
+
+  let track_section = case track.thumbnail {
+    Some(thumbnail) -> [
+      block.section_accessory(
+        eo.image(thumbnail, [eo.image_alt_text("Thumbnail")]),
+      ),
+      ..track_section
+    ]
+    _ -> track_section
+  }
+
+  message.build(
+    [
+      block.section([
+        block.section_text(co.text(status, [co.text_kind(co.Markdown)])),
+      ]),
+      block.section(track_section),
+    ],
+    where: message.InChannel,
+  )
+}
+
+fn perhaps_insult(user: String, next: fn() -> Result(String, error.Error)) {
+  let random_value = random.int(0, 100) |> random.random_sample()
+
+  case random_value {
+    50 ->
+      Ok(message.build(
+        [
+          block.section([
+            block.section_text(
+              co.text("*" <> user <> "* is listening to poopoo kaka", []),
+            ),
+          ]),
+        ],
+        where: message.InChannel,
+      ))
+    _ -> next()
+  }
+}
+
 fn now_playing(ctx: Context, cmd: Command) {
   handle_command(cmd, fn(cmd) {
     use user <- result.try(get_user(cmd))
+    use <- perhaps_insult(user)
     use track <- result.try(lastfm.get_recent_track(ctx.clients.lastfm, user))
     use url <- result.try(spotify.get_track_link(
       ctx.clients.spotify,
@@ -95,68 +175,7 @@ fn now_playing(ctx: Context, cmd: Command) {
       artist: track.artist,
     ))
 
-    let status = {
-      let current = case track.now_playing {
-        True -> "is currently listening to:"
-        False -> "has last listened to:"
-      }
-
-      "<https://www.lastfm.com/user/"
-      <> user
-      <> "|*"
-      <> user
-      <> "*> "
-      <> current
-    }
-
-    let spotify_link = case url {
-      None -> "No stream found..."
-      Some(url) -> {
-        let encoded_link =
-          bit_array.from_string(url) |> bit_array.base64_encode(True)
-        let redirect_url =
-          ctx.domain <> "/redirect/spotify?link=" <> encoded_link
-
-        "<" <> redirect_url <> "|Listen on Spotify>"
-      }
-    }
-
-    let track_section = [
-      block.section_fields(
-        [
-          co.text("*Artist*", [co.text_kind(co.Markdown)]),
-          co.text("*Name*", [co.text_kind(co.Markdown)]),
-          co.text(track.artist, []),
-          co.text(track.name, []),
-          co.text("*Album*", [co.text_kind(co.Markdown)]),
-          co.text("*Stream*", [co.text_kind(co.Markdown)]),
-          co.text(track.album, []),
-          co.text(spotify_link, [co.text_kind(co.Markdown)]),
-        ]
-        |> list.map(block.co_field),
-      ),
-    ]
-
-    let track_section = case track.thumbnail {
-      Some(thumbnail) -> [
-        block.section_accessory(
-          eo.image(thumbnail, [eo.image_alt_text("Thumbnail")]),
-        ),
-        ..track_section
-      ]
-      _ -> track_section
-    }
-
-    message.build(
-      [
-        block.section([
-          block.section_text(co.text(status, [co.text_kind(co.Markdown)])),
-        ]),
-        block.section(track_section),
-      ],
-      where: message.InChannel,
-    )
-    |> Ok()
+    Ok(now_playing_message(ctx:, user:, track:, url:))
   })
 
   ack_command()
