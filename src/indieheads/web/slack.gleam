@@ -98,29 +98,38 @@ fn now_playing(ctx: Context, cmd: Command) {
       Some(url) -> "<" <> url <> "|Listen on Spotify>"
     }
 
+    let section_opts = [
+      block.section_fields(
+        [
+          co.text("*Artist*", [co.text_kind(co.Markdown)]),
+          co.text("*Name*", [co.text_kind(co.Markdown)]),
+          co.text(track.artist, []),
+          co.text(track.name, []),
+          co.text("*Album*", [co.text_kind(co.Markdown)]),
+          co.text("*Stream*", [co.text_kind(co.Markdown)]),
+          co.text(track.album, []),
+          co.text(spotify_link, [co.text_kind(co.Markdown)]),
+        ]
+        |> list.map(block.co_field),
+      ),
+    ]
+
+    let section_opts = case track.thumbnail {
+      Some(thumbnail) -> [
+        block.section_accessory(
+          eo.image(thumbnail, [eo.image_alt_text("Thumbnail")]),
+        ),
+        ..section_opts
+      ]
+      _ -> section_opts
+    }
+
     message.build(
       [
         block.section([
           block.section_text(co.text("status", [co.text_kind(co.Markdown)])),
         ]),
-        block.section([
-          block.section_fields(
-            [
-              co.text("*Artist*", [co.text_kind(co.Markdown)]),
-              co.text("*Name*", [co.text_kind(co.Markdown)]),
-              co.text(track.artist, []),
-              co.text(track.name, []),
-              co.text("*Album*", [co.text_kind(co.Markdown)]),
-              co.text("*Stream*", [co.text_kind(co.Markdown)]),
-              co.text(track.album, []),
-              co.text(spotify_link, [co.text_kind(co.Markdown)]),
-            ]
-            |> list.map(block.co_field),
-          ),
-          block.section_accessory(
-            eo.image("some_url", [eo.image_alt_text("Thumbnail")]),
-          ),
-        ]),
+        block.section(section_opts),
       ],
       where: message.InChannel,
     )
