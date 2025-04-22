@@ -115,9 +115,9 @@ fn now_playing_message(
 
   let track_text = {
     let artist_line = ":bust_in_silhouette:  *Artist* - " <> track.artist
-    let name_line = "musical_note:  *Track* - " <> track.name
+    let name_line = ":musical_note:  *Track* - " <> track.name
     let album_line = ":cd:  *Album* - " <> track.album
-    let link_line = ":link  " <> spotify_link
+    let link_line = ":link:  " <> spotify_link
     string.join([artist_line, name_line, album_line, link_line], with: "\n")
   }
 
