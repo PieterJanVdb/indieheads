@@ -12,7 +12,7 @@ pub type SectionBlockField {
 pub type SectionBlock {
   SectionBlock(
     text: Option(co.CompositionObject),
-    fields: List(SectionBlockField),
+    fields: Option(List(SectionBlockField)),
     accessory: Option(eo.ElementObject),
   )
 }
@@ -32,10 +32,15 @@ fn section_block_field_to_json(field: SectionBlockField) -> json.Json {
 }
 
 fn section_block_to_json(block: SectionBlock) -> json.Json {
-  let props = [
-    #("type", json.string("section")),
-    #("fields", json.array(block.fields, of: section_block_field_to_json)),
-  ]
+  let props = [#("type", json.string("section"))]
+
+  let props = case block.fields {
+    Some(fields) -> [
+      #("fields", json.array(fields, of: section_block_field_to_json)),
+      ..props
+    ]
+    _ -> props
+  }
 
   let props = case block.text {
     Some(text) -> [#("text", co.to_json(text)), ..props]
@@ -58,7 +63,7 @@ pub fn to_json(block: Block) {
 
 pub fn section(options: List(SectionOption)) -> Block {
   let section = {
-    let init = SectionBlock(fields: [], text: None, accessory: None)
+    let init = SectionBlock(fields: None, text: None, accessory: None)
     use init, setup <- list.fold(options, init)
     setup(init)
   }
@@ -75,7 +80,7 @@ pub fn section_accessory(accessory: eo.ElementObject) -> SectionOption {
 }
 
 pub fn section_fields(fields: List(SectionBlockField)) -> SectionOption {
-  fn(obj: SectionBlock) { SectionBlock(..obj, fields:) }
+  fn(obj: SectionBlock) { SectionBlock(..obj, fields: Some(fields)) }
 }
 
 pub fn co_field(obj: co.CompositionObject) -> SectionBlockField {

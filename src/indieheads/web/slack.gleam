@@ -77,9 +77,10 @@ fn get_user(cmd: Command) {
 }
 
 fn error_message() {
-  message.build([
-    block.section([block.section_text(co.text("Something went wrong", []))]),
-  ])
+  message.build(
+    [block.section([block.section_text(co.text("Something went wrong", []))])],
+    where: message.Ephemeral,
+  )
 }
 
 fn now_playing(ctx: Context, cmd: Command) {
@@ -97,29 +98,32 @@ fn now_playing(ctx: Context, cmd: Command) {
       Some(url) -> "<" <> url <> "|Listen on Spotify>"
     }
 
-    message.build([
-      block.section([
-        block.section_text(co.text("status", [co.text_kind(co.Markdown)])),
-      ]),
-      block.section([
-        block.section_fields(
-          [
-            co.text("*Artist*", [co.text_kind(co.Markdown)]),
-            co.text("*Name*", [co.text_kind(co.Markdown)]),
-            co.text(track.artist, []),
-            co.text(track.name, []),
-            co.text("*Album*", [co.text_kind(co.Markdown)]),
-            co.text("*Stream*", [co.text_kind(co.Markdown)]),
-            co.text(track.album, []),
-            co.text(spotify_link, [co.text_kind(co.Markdown)]),
-          ]
-          |> list.map(block.co_field),
-        ),
-        block.section_accessory(
-          eo.image("some_url", [eo.image_alt_text("Thumbnail")]),
-        ),
-      ]),
-    ])
+    message.build(
+      [
+        block.section([
+          block.section_text(co.text("status", [co.text_kind(co.Markdown)])),
+        ]),
+        block.section([
+          block.section_fields(
+            [
+              co.text("*Artist*", [co.text_kind(co.Markdown)]),
+              co.text("*Name*", [co.text_kind(co.Markdown)]),
+              co.text(track.artist, []),
+              co.text(track.name, []),
+              co.text("*Album*", [co.text_kind(co.Markdown)]),
+              co.text("*Stream*", [co.text_kind(co.Markdown)]),
+              co.text(track.album, []),
+              co.text(spotify_link, [co.text_kind(co.Markdown)]),
+            ]
+            |> list.map(block.co_field),
+          ),
+          block.section_accessory(
+            eo.image("some_url", [eo.image_alt_text("Thumbnail")]),
+          ),
+        ]),
+      ],
+      where: message.InChannel,
+    )
     |> Ok()
   })
 
