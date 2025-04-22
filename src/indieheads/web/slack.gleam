@@ -37,13 +37,18 @@ fn handle_command(
         }
       }
 
+      echo cmd
+
       let assert Ok(base_req) = request.to(cmd.response_url)
       let req =
         request.set_method(base_req, http.Post)
+        |> request.set_header("content-type", "application/json")
         |> request.set_body(msg)
 
       case httpc.send(req) {
-        Ok(_) -> Nil
+        Ok(_) -> {
+          wisp.log_info("Successfully handled command (" <> cmd.text <> ")")
+        }
         Error(err) ->
           wisp.log_error("Error replying to slack: " <> string.inspect(err))
       }
