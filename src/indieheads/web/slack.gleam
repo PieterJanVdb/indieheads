@@ -37,13 +37,13 @@ fn handle_command(
         }
       }
 
-      echo cmd
-
       let assert Ok(base_req) = request.to(cmd.response_url)
       let req =
         request.set_method(base_req, http.Post)
         |> request.set_header("content-type", "application/json")
         |> request.set_body(msg)
+
+      echo msg
 
       case httpc.send(req) {
         Ok(_) -> {
