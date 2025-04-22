@@ -21,6 +21,6 @@ fn start_http_server(ctx: Context, secret_key_base: String) {
   |> wisp_mist.handler(secret_key_base)
   |> mist.new
   |> mist.bind("0.0.0.0")
-  |> mist.port(3000)
+  |> mist.port(5000)
   |> mist.start_http
 }
