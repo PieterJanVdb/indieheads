@@ -1,3 +1,4 @@
+import gleam/bit_array
 import gleam/erlang/process
 import gleam/http
 import gleam/http/request
@@ -12,6 +13,7 @@ import indieheads/clients/lastfm
 import indieheads/clients/spotify
 import indieheads/context.{type Context}
 import indieheads/error
+import indieheads/helpers
 import indieheads/web/slack/block
 import indieheads/web/slack/composition_object as co
 import indieheads/web/slack/element_object as eo
@@ -95,7 +97,14 @@ fn now_playing(ctx: Context, cmd: Command) {
 
     let spotify_link = case url {
       None -> "No stream found..."
-      Some(url) -> "<" <> url <> "|Listen on Spotify>"
+      Some(url) -> {
+        let encoded_link =
+          bit_array.from_string(url) |> bit_array.base64_encode(True)
+        let redirect_url =
+          ctx.domain <> "/redirect/spotify?link=" <> encoded_link
+
+        "<" <> redirect_url <> "|Listen on Spotify>"
+      }
     }
 
     let section_opts = [
@@ -139,20 +148,13 @@ fn now_playing(ctx: Context, cmd: Command) {
   ack_command()
 }
 
-fn or_400(result: Result(value, error), next: fn(value) -> Response) -> Response {
-  case result {
-    Ok(value) -> next(value)
-    Error(_) -> wisp.bad_request()
-  }
-}
-
 fn require_command(req: Request, body: String, next: fn(Command) -> Response) {
   case list.key_find(req.headers, "content-type") {
     Ok("application/x-www-form-urlencoded")
     | Ok("application/x-www-form-urlencoded;" <> _) -> {
-      use pairs <- or_400(uri.parse_query(body))
-      use text <- or_400(list.key_find(pairs, "text"))
-      use response_url <- or_400(list.key_find(pairs, "response_url"))
+      use pairs <- helpers.or_400(uri.parse_query(body))
+      use text <- helpers.or_400(list.key_find(pairs, "text"))
+      use response_url <- helpers.or_400(list.key_find(pairs, "response_url"))
 
       next(Command(text:, response_url:))
     }
