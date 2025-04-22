@@ -45,13 +45,20 @@ fn handle_command(
 
       echo msg
 
+      echo req
+
       case httpc.send(req) {
-        Ok(res) -> {
+        Ok(res) if res.status < 400 -> {
           echo res.body
           wisp.log_info("Successfully handled command (" <> cmd.text <> ")")
         }
+        Ok(res) -> {
+          wisp.log_error("Fetch error replying to slack: " <> res.body)
+        }
         Error(err) ->
-          wisp.log_error("Error replying to slack: " <> string.inspect(err))
+          wisp.log_error(
+            "Network error replying to slack: " <> string.inspect(err),
+          )
       }
     },
     linked: False,
