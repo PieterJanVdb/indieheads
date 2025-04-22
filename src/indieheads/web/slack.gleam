@@ -46,7 +46,8 @@ fn handle_command(
       echo msg
 
       case httpc.send(req) {
-        Ok(_) -> {
+        Ok(res) -> {
+          echo res.body
           wisp.log_info("Successfully handled command (" <> cmd.text <> ")")
         }
         Error(err) ->
