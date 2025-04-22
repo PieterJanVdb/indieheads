@@ -10,14 +10,10 @@ pub type TextObjectKind {
   Markdown
 }
 
-pub type CompositionObject {
-  Text(TextObject)
-}
-
 pub type TextOption =
   fn(TextObject) -> TextObject
 
-fn text_object_to_json(obj: TextObject) -> json.Json {
+pub fn text_object_to_json(obj: TextObject) {
   let kind = case obj.kind {
     Markdown -> "mrkdwn"
     PlainText -> "plain_text"
@@ -26,20 +22,10 @@ fn text_object_to_json(obj: TextObject) -> json.Json {
   json.object([#("type", json.string(kind)), #("text", json.string(obj.text))])
 }
 
-pub fn to_json(obj: CompositionObject) -> json.Json {
-  case obj {
-    Text(obj) -> text_object_to_json(obj)
-  }
-}
-
-pub fn text(text: String, options: List(TextOption)) -> CompositionObject {
-  let text_object = {
-    let init = TextObject(text, kind: PlainText)
-    use init, setup <- list.fold(options, init)
-    setup(init)
-  }
-
-  Text(text_object)
+pub fn text(text: String, options: List(TextOption)) {
+  let init = TextObject(text, kind: PlainText)
+  use init, setup <- list.fold(options, init)
+  setup(init)
 }
 
 pub fn text_kind(kind: TextObjectKind) -> TextOption {

@@ -108,20 +108,16 @@ fn now_playing_message(
     }
   }
 
+  let track_text = {
+    let artist_line = ":bust_in_silhouette:  *Artist* - " <> track.artist
+    let name_line = "musical_note:  *Track* - " <> track.name
+    let album_line = ":cd:  *Album* - " <> track.album
+    let link_line = ":link  " <> spotify_link
+    string.join([artist_line, name_line, album_line, link_line], with: "\n")
+  }
+
   let track_section = [
-    block.section_fields(
-      [
-        co.text("*Artist*", [co.text_kind(co.Markdown)]),
-        co.text("*Name*", [co.text_kind(co.Markdown)]),
-        co.text(track.artist, []),
-        co.text(track.name, []),
-        co.text("*Album*", [co.text_kind(co.Markdown)]),
-        co.text("*Stream*", [co.text_kind(co.Markdown)]),
-        co.text(track.album, []),
-        co.text(spotify_link, [co.text_kind(co.Markdown)]),
-      ]
-      |> list.map(block.co_field),
-    ),
+    block.section_text(co.text(track_text, [co.text_kind(co.Markdown)])),
   ]
 
   let track_section = case track.thumbnail {
@@ -136,9 +132,8 @@ fn now_playing_message(
 
   message.build(
     [
-      block.section([
-        block.section_text(co.text(status, [co.text_kind(co.Markdown)])),
-      ]),
+      block.context([co.text(status, [co.text_kind(co.Markdown)])]),
+      block.divider(),
       block.section(track_section),
     ],
     where: message.InChannel,

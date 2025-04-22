@@ -6,14 +6,10 @@ pub type ImageElementObject {
   ImageElementObject(url: String, alt_text: Option(String))
 }
 
-pub type ElementObject {
-  Image(ImageElementObject)
-}
-
 pub type ImageOption =
   fn(ImageElementObject) -> ImageElementObject
 
-fn img_el_object_to_json(obj: ImageElementObject) -> json.Json {
+pub fn img_el_object_to_json(obj: ImageElementObject) -> json.Json {
   let props = [
     #("type", json.string("image")),
     #("image_url", json.string(obj.url)),
@@ -26,20 +22,10 @@ fn img_el_object_to_json(obj: ImageElementObject) -> json.Json {
   |> json.object()
 }
 
-pub fn to_json(obj: ElementObject) -> json.Json {
-  case obj {
-    Image(obj) -> img_el_object_to_json(obj)
-  }
-}
-
-pub fn image(url: String, options: List(ImageOption)) -> ElementObject {
-  let image = {
-    let init = ImageElementObject(url:, alt_text: None)
-    use init, setup <- list.fold(options, init)
-    setup(init)
-  }
-
-  Image(image)
+pub fn image(url: String, options: List(ImageOption)) {
+  let init = ImageElementObject(url:, alt_text: None)
+  use init, setup <- list.fold(options, init)
+  setup(init)
 }
 
 pub fn image_alt_text(alt_text: String) -> ImageOption {

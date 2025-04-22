@@ -24,7 +24,7 @@ pub fn build_message_test() {
               co.text("album", []),
               co.text("spotify_link", [co.text_kind(co.Markdown)]),
             ]
-            |> list.map(block.co_field),
+            |> list.map(block.Text),
           ),
           block.section_accessory(
             eo.image("some_url", [eo.image_alt_text("Thumbnail")]),
