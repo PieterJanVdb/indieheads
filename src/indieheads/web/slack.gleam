@@ -95,6 +95,20 @@ fn now_playing(ctx: Context, cmd: Command) {
       artist: track.artist,
     ))
 
+    let status = {
+      let current = case track.now_playing {
+        True -> "is currently listening to:"
+        False -> "has last listened to:"
+      }
+
+      "<https://www.lastfm.com/user/"
+      <> user
+      <> "|*"
+      <> user
+      <> "*> "
+      <> current
+    }
+
     let spotify_link = case url {
       None -> "No stream found..."
       Some(url) -> {
@@ -107,7 +121,7 @@ fn now_playing(ctx: Context, cmd: Command) {
       }
     }
 
-    let section_opts = [
+    let track_section = [
       block.section_fields(
         [
           co.text("*Artist*", [co.text_kind(co.Markdown)]),
@@ -123,22 +137,22 @@ fn now_playing(ctx: Context, cmd: Command) {
       ),
     ]
 
-    let section_opts = case track.thumbnail {
+    let track_section = case track.thumbnail {
       Some(thumbnail) -> [
         block.section_accessory(
           eo.image(thumbnail, [eo.image_alt_text("Thumbnail")]),
         ),
-        ..section_opts
+        ..track_section
       ]
-      _ -> section_opts
+      _ -> track_section
     }
 
     message.build(
       [
         block.section([
-          block.section_text(co.text("status", [co.text_kind(co.Markdown)])),
+          block.section_text(co.text(status, [co.text_kind(co.Markdown)])),
         ]),
-        block.section(section_opts),
+        block.section(track_section),
       ],
       where: message.InChannel,
     )
