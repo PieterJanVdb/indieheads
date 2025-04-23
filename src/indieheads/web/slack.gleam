@@ -1,8 +1,10 @@
 import gleam/bit_array
 import gleam/erlang/process
+import gleam/float
 import gleam/http
 import gleam/http/request
 import gleam/httpc
+import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
@@ -11,12 +13,12 @@ import gleam/string_tree
 import gleam/uri
 import indieheads/clients/lastfm
 import indieheads/clients/spotify
+import indieheads/clients/weather
 import indieheads/context.{type Context}
 import indieheads/error
 import indieheads/helpers
 import indieheads/web/slack/block
 import indieheads/web/slack/composition_object as co
-import indieheads/web/slack/element_object as eo
 import indieheads/web/slack/message
 import indieheads/web/slack/verify
 import prng/random
@@ -149,6 +151,7 @@ fn perhaps_insult(user: String, next: fn() -> Result(String, error.Error)) {
   }
 }
 
+// Usage: /np [Last.FM username]
 fn now_playing(ctx: Context, cmd: Command) {
   handle_command(cmd, fn(cmd) {
     use user <- result.try(get_user(cmd))
@@ -161,6 +164,45 @@ fn now_playing(ctx: Context, cmd: Command) {
     ))
 
     Ok(now_playing_message(ctx:, user:, track:, url:))
+  })
+
+  ack_command()
+}
+
+// Usage: /weather [{city},{state code},{country}]
+fn get_current_weather(ctx: Context, cmd: Command) {
+  handle_command(cmd, fn(cmd) {
+    use current <- result.try(weather.get_current_weather(
+      ctx.clients.weather,
+      cmd.text,
+    ))
+
+    let text =
+      current.location.name
+      <> " "
+      <> current.location.emoji
+      <> " — _"
+      <> current.description
+      <> "_ "
+      <> current.emoji
+      <> "\n"
+      <> ":thermometer: *"
+      <> current.temperature.0 |> float.to_string()
+      <> " °C / "
+      <> current.temperature.1 |> float.to_string()
+      <> " °F* (feels like "
+      <> current.feels_like.0 |> float.to_string()
+      <> " °C / "
+      <> current.feels_like.1 |> float.to_string()
+      <> " °F)\n"
+      <> ":droplet: "
+      <> current.humidity |> int.to_string()
+      <> "%"
+
+    Ok(message.build(
+      [block.context([co.text(text, [co.text_kind(co.Markdown)])])],
+      where: message.InChannel,
+    ))
   })
 
   ack_command()
@@ -186,6 +228,7 @@ pub fn commands(ctx: Context, req: Request, target: String) {
   use cmd <- require_command(req, body)
   case target {
     "np" -> now_playing(ctx, cmd)
+    "weather" -> get_current_weather(ctx, cmd)
     _ -> wisp.not_found()
   }
 }

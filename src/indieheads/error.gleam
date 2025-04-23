@@ -6,5 +6,6 @@ pub type Error {
   JsonError(json.DecodeError)
   LastFMError(String)
   SpotifyError(String)
+  WeatherError(String)
   CommandError(String)
 }
