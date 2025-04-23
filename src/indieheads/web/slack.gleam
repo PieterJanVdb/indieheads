@@ -200,7 +200,11 @@ fn get_current_weather(ctx: Context, cmd: Command) {
       <> "%"
 
     Ok(message.build(
-      [block.context([co.text(text, [co.text_kind(co.Markdown)])])],
+      [
+        block.section([
+          block.section_text(co.text(text, [co.text_kind(co.Markdown)])),
+        ]),
+      ],
       where: message.InChannel,
     ))
   })
