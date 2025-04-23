@@ -108,7 +108,7 @@ fn get_geolocation(client: OpenWeather, query: String) {
 fn current_decoder(location: Geolocation) {
   let description_and_icon_decoder = {
     let decoder = {
-      use description <- decode.field("descrption", decode.string)
+      use description <- decode.field("description", decode.string)
       use icon <- decode.field("icon", decode.string)
       decode.success(#(description, icon))
     }
