@@ -119,15 +119,14 @@ fn now_playing_message(
     let album_line = "> *Album* - " <> track.album
     let link_line = "> " <> spotify_link
     string.join([artist_line, name_line, album_line, link_line], with: "\n")
+    <> "\n"
   }
 
   message.build(
     [
       block.context([co.text(status, [co.text_kind(co.Markdown)])]),
       block.divider(),
-      block.section([
-        block.section_text(co.text(track_text, [co.text_kind(co.Markdown)])),
-      ]),
+      block.context([co.text(track_text, [co.text_kind(co.Markdown)])]),
     ],
     where: message.InChannel,
   )
