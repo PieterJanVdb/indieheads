@@ -124,7 +124,6 @@ fn now_playing_message(
   message.build(
     [
       block.context([co.text(status, [co.text_kind(co.Markdown)])]),
-      block.divider(),
       block.context([co.text(track_text, [co.text_kind(co.Markdown)])]),
     ],
     where: message.InChannel,
